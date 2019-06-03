@@ -591,3 +591,32 @@ class Node(object):
             return result
         else:
             print(result)
+
+    def computeFrozenStats(self):
+        numIntervals = len(self.s_center)
+        begin = min(interval.begin for interval in self.s_center)
+        end = max(interval.end for interval in self.s_center)
+
+        if self.left_node:
+            n, b, e = self.left_node.computeFrozenStats()
+            numIntervals += n
+            begin = min(begin, b)
+        if self.right_node:
+            n, b, e = self.right_node.computeFrozenStats()
+            numIntervals += n
+            end = max(end, e)
+
+        self.stats = {
+            'numIntervals': numIntervals,
+            'begin': begin,
+            'end': end
+        }
+
+        return (numIntervals, begin, end)
+
+    def purgeFrozenStats(self):
+        del self.stats
+        if self.left_node:
+            self.left_node.purgeFrozenStats()
+        if self.right_node:
+            self.right_node.purgeFrozenStats()

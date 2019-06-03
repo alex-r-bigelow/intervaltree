@@ -7,20 +7,15 @@ A mutable, self-balancing interval tree for Python 2 and 3. Queries may be by po
 
 This library was designed to allow tagging text and time intervals, where the intervals include the lower bound but not the upper bound.
 
-**Version 3 changes!**
+**Fork details**
 
-* The `search(begin, end, strict)` method no longer exists. Instead, use one of these:
-    * `at(point)`
-    * `overlap(begin, end)`
-    * `envelop(begin, end)`
-* The `extend(items)` method no longer exists. Instead, use `update(items)`.
-* Methods like `merge_overlaps()` which took a `strict` argument consistently default to `strict=True`. Before, some methods defaulted to `True` and others to `False`.
+Note: this fork adds a little bit of bloat for a specific use case: efficient histogram computation. If this isn't what you're looking for, use the [main repository](https://github.com/chaimleib/intervaltree).
 
 Installing
 ----------
 
 ```sh
-pip install intervaltree
+pip install git+https://github.com/alex-r-bigelow/intervaltree.git
 ```
 
 Features
@@ -121,6 +116,11 @@ Features
 
 * Pickle-friendly
 * Automatic AVL balancing
+
+* Histogram computation
+    * `tree.freeze()`    (makes the tree immutable, and takes O(n * log(n)) time to compute statistics internally for fast histogram computation)
+    * `tree.thaw()`      (makes the tree mutable again, removing internal statistics)
+    * `tree.computeHistogram(10)`    (returns ten `Interval` objects as a list, containing the bounds and counts for each bin; freezes the tree if it's not already frozen. Ignoring the `freeze()` step that will occur the first time `computeHistogram` is called, computation takes O(b * log(n)) time, where b is the number of bins)
 
 Examples
 --------

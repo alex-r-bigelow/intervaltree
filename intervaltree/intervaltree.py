@@ -28,6 +28,7 @@ from numbers import Number
 from sortedcontainers import SortedDict
 from copy import copy
 from warnings import warn
+from math import floor
 
 try:
     from collections.abc import MutableSet  # Python 3?
@@ -256,6 +257,7 @@ class IntervalTree(MutableSet):
 
         Completes in O(n*log n) time.
         """
+        self.frozen = False
         intervals = set(intervals) if intervals is not None else set()
         for iv in intervals:
             if iv.is_null():
@@ -317,6 +319,9 @@ class IntervalTree(MutableSet):
 
         Completes in O(log n) time.
         """
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
+
         if interval in self:
             return
 
@@ -360,6 +365,9 @@ class IntervalTree(MutableSet):
 
         Completes in O(log n) time.
         """
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
+
         #self.verify()
         if interval not in self:
             #print(self.all_intervals)
@@ -384,6 +392,9 @@ class IntervalTree(MutableSet):
 
         Completes in O(log n) time.
         """
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
+
         if interval not in self:
             return
         self.all_intervals.discard(interval)
@@ -546,6 +557,8 @@ class IntervalTree(MutableSet):
 
         Completes in O(1) tine.
         """
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
         self.__init__()
 
     def find_nested(self):
@@ -630,6 +643,8 @@ class IntervalTree(MutableSet):
         """
         if not self:
             return
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
         if len(self.boundary_table) == 2:
             return
 
@@ -672,6 +687,8 @@ class IntervalTree(MutableSet):
         """
         if not self:
             return
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
 
         sorted_intervals = sorted(self.all_intervals)  # get sorted intervals
         merged = []
@@ -733,6 +750,8 @@ class IntervalTree(MutableSet):
         """
         if not self:
             return
+        if self.frozen:
+            raise Exception("Can't modify frozen IntervalTree")
 
         sorted_intervals = sorted(self.all_intervals)  # get sorted intervals
         merged = []
@@ -1140,3 +1159,53 @@ class IntervalTree(MutableSet):
         """
         return IntervalTree, (sorted(self.all_intervals),)
 
+    def freeze(self):
+        if self.frozen:
+            return
+        self.frozen = True
+        if self.top_node:
+            self.top_node.computeFrozenStats()
+
+    def thaw(self):
+        if not self.frozen:
+            return
+        self.frozen = False
+        if self.top_node:
+            self.top_node.purgeFrozenStats()
+
+    def computeHistogram(self, bins=100):
+        self.freeze()
+
+        globalBegin = self.top_node.stats['begin']
+        globalEnd = self.top_node.stats['end']
+        binSize = (globalEnd - globalBegin) / bins
+
+        counts = [0] * bins
+
+        def recurse(node):
+            # nonlocal counts, bins, globalBegin
+            beginBin = floor((node.stats['begin'] - globalBegin) / bins)
+            endBin = floor((node.stats['end'] - globalBegin) / bins)
+            if beginBin == endBin:
+                # If the node's range fits within a single bin, just add its
+                # count to that bin and return early
+                counts[beginBin] += node.stats['numIntervals']
+            else:
+                # Otherwise, bin this node's intervals normally, and recurse
+                for interval in node.s_center:
+                    beginBin = floor((interval.begin - globalBegin) / bins)
+                    endBin = floor((interval.end - globalBegin) / bins)
+                if node.left_node:
+                    recurse(node.left_node)
+                if node.right_node:
+                    recurse(node.right_node)
+        if self.top_node:
+            recurse(self.top_node)
+
+        results = []
+        for i, count in enumerate(counts):
+            begin = globalBegin + i * binSize
+            end = globalBegin + (i + 1) * binSize
+            results.append(Interval(begin, end, count))
+
+        return results
