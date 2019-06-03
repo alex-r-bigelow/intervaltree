@@ -1182,19 +1182,22 @@ class IntervalTree(MutableSet):
 
         counts = [0] * bins
 
+        def getBin(value):
+            b = floor((value - globalBegin) / binSize)
+            b = min(b, bins - 1) # the last bin is inclusive
+            return b
+
         def recurse(node):
-            # nonlocal counts, bins, globalBegin
-            beginBin = floor((node.stats['begin'] - globalBegin) / bins)
-            endBin = floor((node.stats['end'] - globalBegin) / bins)
-            if beginBin == endBin:
+            beginBin = getBin(node.stats['begin'])
+            if beginBin == getBin(node.stats['end']):
                 # If the node's range fits within a single bin, just add its
                 # count to that bin and return early
                 counts[beginBin] += node.stats['numIntervals']
             else:
                 # Otherwise, bin this node's intervals normally, and recurse
                 for interval in node.s_center:
-                    beginBin = floor((interval.begin - globalBegin) / bins)
-                    endBin = floor((interval.end - globalBegin) / bins)
+                    for binNo in range(getBin(interval.begin), getBin(interval.end) + 1):
+                        counts[binNo] += 1
                 if node.left_node:
                     recurse(node.left_node)
                 if node.right_node:
