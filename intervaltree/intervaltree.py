@@ -1160,6 +1160,13 @@ class IntervalTree(MutableSet):
         return IntervalTree, (sorted(self.all_intervals),)
 
     def freeze(self):
+        """
+        Computes statistics for every node to enable fast histogram
+        computations, and prevents subsequent add / remove / discard
+        operations (call thaw() to undo).
+
+        Completes in O(n * log(n)) time.
+        """
         if self.frozen:
             return
         self.frozen = True
@@ -1167,36 +1174,71 @@ class IntervalTree(MutableSet):
             self.top_node.computeFrozenStats()
 
     def thaw(self):
+        """
+        Re-enables add / remove / discard operations after a freeze().
+
+        Completes in O(n * log(n)) time.
+        """
         if not self.frozen:
             return
         self.frozen = False
         if self.top_node:
             self.top_node.purgeFrozenStats()
 
-    def computeHistogram(self, bins=100):
+    def computeHistogram(self, bins=100, begin=None, end=None):
+        """
+        Returns a list of evenly-spaced Intervals of length bins,
+        where the data payload in each interval is the total number
+        of Intervals that intersect with the bin. If not already
+        frozen, this calls freeze()
+
+        Assuming the structure is already frozen, completes in
+        O(b * log(n)) time, where b is the number of bins.
+        :rtype: int
+        """
         self.freeze()
 
-        globalBegin = self.top_node.stats['begin']
-        globalEnd = self.top_node.stats['end']
+        globalBegin = begin or self.top_node.stats['begin']
+        globalEnd = end or self.top_node.stats['end']
         binSize = (globalEnd - globalBegin) / bins
 
         counts = [0] * bins
 
         def getBin(value):
-            b = floor((value - globalBegin) / binSize)
-            b = min(b, bins - 1) # the last bin is inclusive
+            b = (value - globalBegin) / binSize
+            # Consistent with this class's interpretation, all Intervals,
+            # including bins, are not inclusive of their upper bound. However,
+            # for complete histograms, we make an exception for the highest bin
+            # (which we interpret as inclusive)
+            exclusive = b == floor(b) and not value == globalEnd
+            b = floor(b)
+            return (b, exclusive)
+
+        def clampBin(b):
+            b = max(b, 0) # clamp to 0
+            b = min(b, bins) # clamp to num bins
             return b
 
         def recurse(node):
-            beginBin = getBin(node.stats['begin'])
-            if beginBin == getBin(node.stats['end']):
+            beginBin = getBin(node.stats['begin'])[0]
+            endBin, exclusiveEnd = getBin(node.stats['end'])
+            if beginBin >= bins or endBin < 0 or (exclusiveEnd and endBin == 0):
+                # this node is outside the bins that we're even counting; we
+                # can ignore it and its descendants
+                return
+            if beginBin == endBin or (exclusiveEnd and beginBin == endBin - 1):
                 # If the node's range fits within a single bin, just add its
                 # count to that bin and return early
                 counts[beginBin] += node.stats['numIntervals']
             else:
                 # Otherwise, bin this node's intervals normally, and recurse
                 for interval in node.s_center:
-                    for binNo in range(getBin(interval.begin), getBin(interval.end) + 1):
+                    beginBin = clampBin(getBin(interval.begin)[0])
+                    endBin, exclusiveEnd = getBin(interval.end)
+                    if not exclusiveEnd:
+                        endBin += 1
+                    endBin = clampBin(endBin)
+                    for binNo in range(beginBin, endBin):
                         counts[binNo] += 1
                 if node.left_node:
                     recurse(node.left_node)

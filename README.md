@@ -118,9 +118,9 @@ Features
 * Automatic AVL balancing
 
 * Histogram computation
-    * `tree.freeze()`    (makes the tree immutable, and takes O(n * log(n)) time to compute statistics internally for fast histogram computation)
-    * `tree.thaw()`      (makes the tree mutable again, removing internal statistics)
-    * `tree.computeHistogram(10)`    (returns ten `Interval` objects as a list, containing the bounds and counts for each bin; freezes the tree if it's not already frozen. Ignoring the `freeze()` step that will occur the first time `computeHistogram` is called, computation takes O(b * log(n)) time, where b is the number of bins)
+    * `tree.freeze()`    (compute statistics internally for fast histogram computations; prevents subsequent editing)
+    * `tree.thaw()`      (makes the tree editable again, removing histogram statistics)
+    * `tree.computeHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin; `freeze`s the tree if not already frozen)
 
 Examples
 --------
