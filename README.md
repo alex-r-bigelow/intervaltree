@@ -48,6 +48,7 @@ Features
 * Overlap queries
     * `tree[begin:end]`
     * `tree.overlap(begin, end)`          (same as previous)
+    * `tree.iterRange(begin, end)`        (same as previous, except returns an iterator that yields Intervals immediately)
 
 * Envelop queries
     * `tree.envelop(begin, end)`
@@ -118,9 +119,7 @@ Features
 * Automatic AVL balancing
 
 * Histogram computation
-    * `tree.freeze()`    (compute statistics internally for fast histogram computations; prevents subsequent editing)
-    * `tree.thaw()`      (makes the tree editable again, removing histogram statistics)
-    * `tree.computeHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin; `freeze`s the tree if not already frozen)
+    * `tree.computeHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin)
 
 Examples
 --------

@@ -1176,14 +1176,12 @@ class IntervalTree(MutableSet):
 
     def computeCountHistogram(self, bins=100, begin=None, end=None):
         """
-        Returns a list of evenly-spaced Intervals of length bins,
-        where the data payload in each interval is the total number
-        of Intervals that intersect with the bin. If not already
-        frozen, this calls freeze()
+        Returns a list of evenly-spaced Intervals of length bins, where the data
+        payload in each interval is the total number of Intervals that intersect
+        with the bin.
 
-        Assuming the structure is already frozen, completes in
-        O(b * log(n)) time, where b is the number of bins.
-        :rtype: int
+        Completes in O(b * log(n)) time, where b is the number of bins.
+        :rtype: list of Interval
         """
         globalBegin = begin or self.top_node.begin
         globalEnd = end or self.top_node.end
