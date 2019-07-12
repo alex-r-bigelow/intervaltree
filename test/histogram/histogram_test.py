@@ -10,7 +10,7 @@ def test_simple_histogram():
         Interval(40, 50),
         Interval(10, 40)
     ])
-    histogram = tree.computeHistogram(5)
+    histogram = tree.computeCountHistogram(5)
     expectedResult = [
         Interval(10.0, 20.0, 2),
         Interval(20.0, 30.0, 3),
@@ -31,7 +31,7 @@ def test_sub_histogram():
         Interval(40, 50),
         Interval(10, 40)
     ])
-    histogram = tree.computeHistogram(2, 20, 40)
+    histogram = tree.computeCountHistogram(2, 20, 40)
     expectedResult = [
         Interval(20.0, 30.0, 3),
         Interval(30.0, 40.0, 2)
@@ -50,7 +50,7 @@ def test_single_bin_histogram():
         Interval(40, 50),
         Interval(10, 40)
     ])
-    histogram = tree.computeHistogram(1)
+    histogram = tree.computeCountHistogram(1)
     expectedResult = [
         Interval(10.0, 60.0, 4)
     ]

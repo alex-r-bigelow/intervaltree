@@ -1158,40 +1158,13 @@ class IntervalTree(MutableSet):
         """
         return IntervalTree, (sorted(self.all_intervals),)
 
-    def freeze(self):
-        """
-        Computes statistics for every node to enable fast histogram
-        computations, and prevents subsequent add / remove / discard
-        operations (call thaw() to undo).
-
-        Completes in O(n * log(n)) time.
-        """
-        if self.frozen:
-            return
-        self.frozen = True
-        if self.top_node:
-            self.top_node.computeFrozenStats()
-
-    def thaw(self):
-        """
-        Re-enables add / remove / discard operations after a freeze().
-
-        Completes in O(n * log(n)) time.
-        """
-        if not self.frozen:
-            return
-        self.frozen = False
-        if self.top_node:
-            self.top_node.purgeFrozenStats()
-
-    def iterRange(self, begin, end):
+    def iterRange(self, begin=None, end=None):
         """
         Returns an iterator over a search range.
 
         TODO: complexity
         :rtype: collections.Iterable[Interval]
         """
-        self.freeze()
         if begin is None:
             begin = self.begin()
         if end is None:
@@ -1201,7 +1174,7 @@ class IntervalTree(MutableSet):
             return
         yield from root.iterRange(begin, end)
 
-    def computeHistogram(self, bins=100, begin=None, end=None):
+    def computeCountHistogram(self, bins=100, begin=None, end=None):
         """
         Returns a list of evenly-spaced Intervals of length bins,
         where the data payload in each interval is the total number
@@ -1212,10 +1185,8 @@ class IntervalTree(MutableSet):
         O(b * log(n)) time, where b is the number of bins.
         :rtype: int
         """
-        self.freeze()
-
-        globalBegin = begin or self.top_node.stats['begin']
-        globalEnd = end or self.top_node.stats['end']
+        globalBegin = begin or self.top_node.begin
+        globalEnd = end or self.top_node.end
         binSize = (globalEnd - globalBegin) / bins
 
         counts = [0] * bins
@@ -1236,8 +1207,8 @@ class IntervalTree(MutableSet):
             return b
 
         def recurse(node):
-            beginBin = getBin(node.stats['begin'])[0]
-            endBin, exclusiveEnd = getBin(node.stats['end'])
+            beginBin = getBin(node.begin)[0]
+            endBin, exclusiveEnd = getBin(node.end)
             if beginBin >= bins or endBin < 0 or (exclusiveEnd and endBin == 0):
                 # this node is outside the bins that we're even counting; we
                 # can ignore it and its descendants
@@ -1245,7 +1216,7 @@ class IntervalTree(MutableSet):
             if beginBin == endBin or (exclusiveEnd and beginBin == endBin - 1):
                 # If the node's range fits within a single bin, just add its
                 # count to that bin and return early
-                counts[beginBin] += node.stats['numIntervals']
+                counts[beginBin] += node.totalCount
             else:
                 # Otherwise, bin this node's intervals normally, and recurse
                 for interval in node.s_center:

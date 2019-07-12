@@ -46,6 +46,9 @@ class Node(object):
         self.right_node = right_node
         self.depth = 0    # will be set when rotated
         self.balance = 0  # ditto
+        self.totalCount = 0     # These will also be
+        self.begin = None       # recomputed after
+        self.end = None         # rotation
         self.rotate()
 
     @classmethod
@@ -99,12 +102,38 @@ class Node(object):
 
     def refresh_balance(self):
         """
-        Recalculate self.balance and self.depth based on child node values.
+        Recalculate self.balance, self.depth, and self.stats based on child node
+        values.
         """
         left_depth = self.left_node.depth if self.left_node else 0
         right_depth = self.right_node.depth if self.right_node else 0
         self.depth = 1 + max(left_depth, right_depth)
         self.balance = right_depth - left_depth
+        # Update stats...
+        self.totalCount = len(self.s_center)
+        self.begin = None
+        self.end = None
+        if self.s_center:
+            self.begin = min(i.begin for i in self.s_center)
+            self.end = max(i.end for i in self.s_center)
+        if self.left_node:
+            self.totalCount += self.left_node.totalCount
+            if self.begin is None:
+                if self.left_node.begin is None:
+                    self.begin = self.x_center
+                else:
+                    self.begin = self.left_node.begin
+            elif self.left_node.begin is not None:
+                self.begin = min(self.begin, self.left_node.begin)
+        if self.right_node:
+            self.totalCount += self.right_node.totalCount
+            if self.end is None:
+                if self.right_node.end is None:
+                    self.end = self.x_center
+                else:
+                    self.end = self.right_node.end
+            elif self.right_node.end is not None:
+                self.end = max(self.end, self.right_node.end)
 
     def compute_depth(self):
         """
@@ -593,38 +622,9 @@ class Node(object):
             print(result)
 
     def iterRange(self, begin, end):
-        if begin < self.stats['begin'] and self.left_node:
+        if begin < self.begin and self.left_node:
             yield from self.left_node.iterRange(begin, end)
         for interval in self.s_center:
             yield interval
-        if end > self.stats['end'] and self.right_node:
+        if end > self.end and self.right_node:
             yield from self.right_node.iterRange(begin, end)
-
-    def computeFrozenStats(self):
-        numIntervals = len(self.s_center)
-        begin = min(interval.begin for interval in self.s_center)
-        end = max(interval.end for interval in self.s_center)
-
-        if self.left_node:
-            n, b, e = self.left_node.computeFrozenStats()
-            numIntervals += n
-            begin = min(begin, b)
-        if self.right_node:
-            n, b, e = self.right_node.computeFrozenStats()
-            numIntervals += n
-            end = max(end, e)
-
-        self.stats = {
-            'numIntervals': numIntervals,
-            'begin': begin,
-            'end': end
-        }
-
-        return (numIntervals, begin, end)
-
-    def purgeFrozenStats(self):
-        del self.stats
-        if self.left_node:
-            self.left_node.purgeFrozenStats()
-        if self.right_node:
-            self.right_node.purgeFrozenStats()
