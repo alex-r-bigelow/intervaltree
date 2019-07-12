@@ -91,6 +91,20 @@ def test_partial_get_query():
     assert_get(IntervalTree.from_tuples(data.ivs1.data), 7)
     assert_get(IntervalTree.from_tuples(data.ivs2.data), -3)
 
+def test_partial_iter_range():
+    def assert_iter(t, limit):
+        s = set(t)
+        assert set([i for i in t.iterRange()]) == s
+
+        s = set(iv for iv in t if iv.begin < limit)
+        assert set([i for i in t.iterRange(,limit)]) == s
+
+        s = set(iv for iv in t if iv.end > limit)
+        assert set([i for i in t.iterRange(limit)]) == s
+
+    assert_iter(IntervalTree.from_tuples(data.ivs1.data), 7)
+    assert_iter(IntervalTree.from_tuples(data.ivs2.data), -3)
+
 
 def test_tree_bounds():
     def assert_tree_bounds(t):

@@ -1042,7 +1042,6 @@ class IntervalTree(MutableSet):
             return report
         return cumulative
 
-
     def __getitem__(self, index):
         """
         Returns a set of all intervals overlapping the given index or
@@ -1184,6 +1183,23 @@ class IntervalTree(MutableSet):
         self.frozen = False
         if self.top_node:
             self.top_node.purgeFrozenStats()
+
+    def iterRange(self, begin, end):
+        """
+        Returns an iterator over a search range.
+
+        TODO: complexity
+        :rtype: collections.Iterable[Interval]
+        """
+        self.freeze()
+        if begin is None:
+            begin = self.begin()
+        if end is None:
+            end = self.end()
+        root = self.top_node
+        if not root or begin >= end:
+            return
+        yield from root.iterRange(begin, end)
 
     def computeHistogram(self, bins=100, begin=None, end=None):
         """

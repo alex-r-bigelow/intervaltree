@@ -592,6 +592,14 @@ class Node(object):
         else:
             print(result)
 
+    def iterRange(self, begin, end):
+        if begin < self.stats['begin'] and self.left_node:
+            yield from self.left_node.iterRange(begin, end)
+        for interval in self.s_center:
+            yield interval
+        if end > self.stats['end'] and self.right_node:
+            yield from self.right_node.iterRange(begin, end)
+
     def computeFrozenStats(self):
         numIntervals = len(self.s_center)
         begin = min(interval.begin for interval in self.s_center)
