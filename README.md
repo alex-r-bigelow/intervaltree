@@ -3,13 +3,18 @@
 intervaltree
 ============
 
-A mutable, self-balancing interval tree for Python 2 and 3. Queries may be by point, by range overlap, or by range envelopment.
+A mutable, self-balancing interval tree for Python 3. Queries may be by point, by range overlap, or by range envelopment.
 
 This library was designed to allow tagging text and time intervals, where the intervals include the lower bound but not the upper bound.
 
 **Fork details**
 
-Note: this fork adds a little bit of bloat for a specific use case: efficient histogram computation. If this isn't what you're looking for, use the [main repository](https://github.com/chaimleib/intervaltree).
+Note: this fork adds a little bit of `O(n log n)` bloat for specific use cases, namely:
+
+* efficient histogram computation
+* iterative results for overlap queries (instead of collecting all the results in memory before returning)
+
+If this isn't what you're looking for, I suggest you stick with the [main repository](https://github.com/chaimleib/intervaltree).
 
 Installing
 ----------
@@ -21,7 +26,7 @@ pip install git+https://github.com/alex-r-bigelow/intervaltree.git
 Features
 --------
 
-* Supports Python 2.7 and Python 3.4+ (Tested under 2.7, and 3.4 thru 3.7)
+* Supports Python 3.4+ (Tested under 3.6.7)
 * Initializing
     * blank `tree = IntervalTree()`
     * from an iterable of `Interval` objects (`tree = IntervalTree(intervals)`)
@@ -48,7 +53,7 @@ Features
 * Overlap queries
     * `tree[begin:end]`
     * `tree.overlap(begin, end)`          (same as previous)
-    * `tree.iterRange(begin, end)`        (same as previous, except returns an iterator that yields Intervals immediately)
+    * `tree.iterOverlap(begin, end)`        (same as previous, except returns an iterator that yields Intervals immediately)
 
 * Envelop queries
     * `tree.envelop(begin, end)`
@@ -119,7 +124,7 @@ Features
 * Automatic AVL balancing
 
 * Histogram computation
-    * `tree.computeHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin)
+    * `tree.computeCountHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin)
 
 Examples
 --------

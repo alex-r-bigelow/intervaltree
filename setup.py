@@ -69,7 +69,7 @@ with io.open('README.md', 'r', encoding='utf-8') as fh:
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
-        self.test_args = []
+        self.test_args = ['-vv']
         self.test_suite = True
 
     def run_tests(self):
