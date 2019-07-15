@@ -1216,7 +1216,7 @@ class IntervalTree(MutableSet):
                 # count to that bin and return early
                 counts[beginBin] += node.totalCount
             else:
-                # Otherwise, bin this node's intervals normally, and recurse
+                # Otherwise, count this node's intervals individually, and recurse
                 for interval in node.s_center:
                     beginBin = clampBin(getBin(interval.begin)[0])
                     endBin, exclusiveEnd = getBin(interval.end)
@@ -1237,5 +1237,77 @@ class IntervalTree(MutableSet):
             begin = globalBegin + i * binSize
             end = globalBegin + (i + 1) * binSize
             results.append(Interval(begin, end, count))
+
+        return results
+
+    def computeUtilizationHistogram(self, bins=100, begin=None, end=None):
+        """
+        Returns a list of evenly-spaced Intervals of length bins, where the data
+        payload in each interval is the percentage of the bin containing an
+        interval. Note that this will be higher than 1.0 if multiple intervals
+        within the bin overlap each other (i.e. two intervals covering the
+        entire bin would result in 2.0, or a 200% utilization rate).
+
+        Completes in O(b * log(n)) time, where b is the number of bins.
+        :rtype: list of Interval
+        """
+        globalBegin = begin or self.top_node.begin
+        globalEnd = end or self.top_node.end
+        binSize = (globalEnd - globalBegin) / bins
+
+        scores = [0] * bins
+
+        def getBin(value):
+            b = (value - globalBegin) / binSize
+            # Consistent with this class's interpretation, all Intervals,
+            # including bins, are not inclusive of their upper bound. However,
+            # for complete histograms, we make an exception for the highest bin
+            # (which we interpret as inclusive)
+            exclusive = b == floor(b) and not value == globalEnd
+            b = floor(b)
+            return (b, exclusive)
+
+        def clampBin(b):
+            b = max(b, 0) # clamp to 0
+            b = min(b, bins) # clamp to num bins
+            return b
+
+        def recurse(node):
+            beginBin = getBin(node.begin)[0]
+            endBin, exclusiveEnd = getBin(node.end)
+            if beginBin >= bins or endBin < 0 or (exclusiveEnd and endBin == 0):
+                # this node is outside the bins that we're including; we
+                # can ignore it and its descendants
+                return
+            if beginBin == endBin or (exclusiveEnd and beginBin == endBin - 1):
+                # If the node's range fits within a single bin, just add its
+                # normalized score to that bin and return early
+                scores[beginBin] += node.utilization * (node.end - node.begin) / binSize
+            else:
+                # Otherwise, score this node's intervals individually, and recurse
+                for interval in node.s_center:
+                    beginBin = clampBin(getBin(interval.begin)[0])
+                    endBin, exclusiveEnd = getBin(interval.end)
+                    if not exclusiveEnd:
+                        endBin += 1
+                    endBin = clampBin(endBin)
+                    for binNo in range(beginBin, endBin):
+                        beginBound = globalBegin + binSize * binNo
+                        endBound = beginBound + binSize
+                        overlapBegin = max(beginBound, interval.begin)
+                        overlapEnd = min(endBound, interval.end)
+                        scores[binNo] += (overlapEnd - overlapBegin) / binSize
+                if node.left_node:
+                    recurse(node.left_node)
+                if node.right_node:
+                    recurse(node.right_node)
+        if self.top_node:
+            recurse(self.top_node)
+
+        results = []
+        for i, score in enumerate(scores):
+            begin = globalBegin + i * binSize
+            end = globalBegin + (i + 1) * binSize
+            results.append(Interval(begin, end, score))
 
         return results

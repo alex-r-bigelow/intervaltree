@@ -46,8 +46,9 @@ class Node(object):
         self.right_node = right_node
         self.depth = 0    # will be set when rotated
         self.balance = 0  # ditto
-        self.totalCount = 0     # These will also be
-        self.begin = None       # recomputed after
+        self.totalCount = 0     # These will also
+        self.utilization = 0    # be recomputed
+        self.begin = None       # after
         self.end = None         # rotation
         self.rotate()
 
@@ -109,7 +110,7 @@ class Node(object):
         right_depth = self.right_node.depth if self.right_node else 0
         self.depth = 1 + max(left_depth, right_depth)
         self.balance = right_depth - left_depth
-        # Update stats...
+        # Update stats: totalCount, begin, and end
         self.totalCount = len(self.s_center)
         self.begin = None
         possibleBegins = [i.begin for i in self.s_center]
@@ -125,6 +126,22 @@ class Node(object):
             if self.right_node.end is not None:
                 possibleEnds.append(self.right_node.end)
         self.end = max(possibleEnds) if possibleEnds else None
+        # Update stats: utilization
+        if self.begin is None or self.end is None:
+            self.utilization = None
+        else:
+            self.utilization = 0.0
+            nodeLength = self.end - self.begin
+            for i in self.s_center:
+                begin = max(i.begin, self.begin)
+                end = min(i.end, self.end)
+                self.utilization += (end - begin) / nodeLength
+            if self.left_node and self.left_node.utilization is not None:
+                leftLength = self.left_node.end - self.left_node.begin
+                self.utilization += self.left_node.utilization * leftLength / nodeLength
+            if self.right_node and self.right_node.utilization is not None:
+                rightLength = self.right_node.end - self.right_node.begin
+                self.utilization += self.right_node.utilization * rightLength / nodeLength
 
     def compute_depth(self):
         """

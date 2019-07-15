@@ -7,3 +7,4 @@ from . import ivs1
 from . import ivs1_float_copy_structure
 from . import ivs2
 from . import ivs3
+from . import histograms
