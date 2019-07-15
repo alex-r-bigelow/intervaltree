@@ -124,7 +124,8 @@ Features
 * Automatic AVL balancing
 
 * Histogram computation
-    * `tree.computeCountHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin)
+    * `tree.computeCountHistogram(bins)`          (returns a list of evenly-spaced `Interval` objects of length `bins`, with counts for the number of `Interval`s that intersect each bin)
+    * `tree.computeUtilizationHistogram(bins)`    (returns a list of evenly-spaced `Interval` objects of length `bins`, with the percentage of each bin that contains an interval. Note that this will be higher than 1.0 if multiple intervals within the bin overlap each other; i.e. two intervals covering the entire bin would result in 2.0, or a 200% utilization rate)
 
 Examples
 --------
