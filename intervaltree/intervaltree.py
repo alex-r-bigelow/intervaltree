@@ -1165,11 +1165,13 @@ class IntervalTree(MutableSet):
         Completes in O(b * log(n)) time, where b is the number of bins.
         :rtype: list of Interval
         """
+        counts = [0] * bins
+        if self.top_node is None:
+            return counts
+
         globalBegin = begin or self.top_node.begin
         globalEnd = end or self.top_node.end
         binSize = (globalEnd - globalBegin) / bins
-
-        counts = [0] * bins
 
         def getBin(value):
             b = (value - globalBegin) / binSize
@@ -1233,11 +1235,13 @@ class IntervalTree(MutableSet):
         Completes in O(b * log(n)) time, where b is the number of bins.
         :rtype: list of Interval
         """
+        scores = [0] * bins
+        if self.top_node is None:
+            return scores
+
         globalBegin = begin or self.top_node.begin
         globalEnd = end or self.top_node.end
         binSize = (globalEnd - globalBegin) / bins
-
-        scores = [0] * bins
 
         def getBin(value):
             b = (value - globalBegin) / binSize
