@@ -257,7 +257,6 @@ class IntervalTree(MutableSet):
 
         Completes in O(n*log n) time.
         """
-        self.frozen = False
         intervals = set(intervals) if intervals is not None else set()
         for iv in intervals:
             if iv.is_null():
@@ -319,9 +318,6 @@ class IntervalTree(MutableSet):
 
         Completes in O(log n) time.
         """
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
-
         if interval in self:
             return
 
@@ -365,9 +361,6 @@ class IntervalTree(MutableSet):
 
         Completes in O(log n) time.
         """
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
-
         #self.verify()
         if interval not in self:
             #print(self.all_intervals)
@@ -392,9 +385,6 @@ class IntervalTree(MutableSet):
 
         Completes in O(log n) time.
         """
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
-
         if interval not in self:
             return
         self.all_intervals.discard(interval)
@@ -557,8 +547,6 @@ class IntervalTree(MutableSet):
 
         Completes in O(1) tine.
         """
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
         self.__init__()
 
     def find_nested(self):
@@ -643,8 +631,6 @@ class IntervalTree(MutableSet):
         """
         if not self:
             return
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
         if len(self.boundary_table) == 2:
             return
 
@@ -687,8 +673,6 @@ class IntervalTree(MutableSet):
         """
         if not self:
             return
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
 
         sorted_intervals = sorted(self.all_intervals)  # get sorted intervals
         merged = []
@@ -750,8 +734,6 @@ class IntervalTree(MutableSet):
         """
         if not self:
             return
-        if self.frozen:
-            raise Exception("Can't modify frozen IntervalTree")
 
         sorted_intervals = sorted(self.all_intervals)  # get sorted intervals
         merged = []
