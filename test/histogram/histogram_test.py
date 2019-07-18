@@ -68,5 +68,16 @@ def test_large_utilization_histogram():
     expectedResult = IntervalTree.from_tuples(data.histograms.large_utilization)
     assert IntervalTree.from_tuples(round_large(histogram)) == expectedResult
 
+def test_empty_histogram():
+    tree = IntervalTree()
+    expectedResult = [
+        Interval(0.0, 0.25, 0.0),
+        Interval(0.25, 0.5, 0.0),
+        Interval(0.5, 0.75, 0.0),
+        Interval(0.75, 1.0, 0.0)
+    ]
+    assert tree.computeCountHistogram(4) == expectedResult
+    assert tree.computeUtilizationHistogram(4) == expectedResult
+
 if __name__ == "__main__":
     pytest.main([__file__, '-v'])

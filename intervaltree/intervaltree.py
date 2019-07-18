@@ -1166,11 +1166,13 @@ class IntervalTree(MutableSet):
         :rtype: list of Interval
         """
         counts = [0] * bins
-        if self.top_node is None:
-            return counts
 
-        globalBegin = begin or self.top_node.begin
-        globalEnd = end or self.top_node.end
+        if self.top_node is None:
+            globalBegin = begin or 0
+            globalEnd = end or 1
+        else:
+            globalBegin = begin or self.top_node.begin
+            globalEnd = end or self.top_node.end
         binSize = (globalEnd - globalBegin) / bins
 
         def getBin(value):
@@ -1236,11 +1238,13 @@ class IntervalTree(MutableSet):
         :rtype: list of Interval
         """
         scores = [0] * bins
-        if self.top_node is None:
-            return scores
 
-        globalBegin = begin or self.top_node.begin
-        globalEnd = end or self.top_node.end
+        if self.top_node is None:
+            globalBegin = begin or 0
+            globalEnd = end or 1
+        else:
+            globalBegin = begin or self.top_node.begin
+            globalEnd = end or self.top_node.end
         binSize = (globalEnd - globalBegin) / bins
 
         def getBin(value):
