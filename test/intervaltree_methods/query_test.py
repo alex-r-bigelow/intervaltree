@@ -19,6 +19,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from __future__ import absolute_import
+from functools import cmp_to_key
 from intervaltree import Interval, IntervalTree
 import pytest
 from test import data, match
@@ -91,16 +92,33 @@ def test_partial_get_query():
     assert_get(IntervalTree.from_tuples(data.ivs1.data), 7)
     assert_get(IntervalTree.from_tuples(data.ivs2.data), -3)
 
+
 def test_partial_iter_range():
     def assert_iter(t, limit):
-        s = set(t)
-        assert set(i for i in t.iterOverlap()) == s
+        s = sorted(t)
+        assert [i for i in t.iterOverlap()] == s
 
-        s = set(iv for iv in t if iv.begin < limit)
-        assert set(i for i in t.iterOverlap(None, limit)) == s
+        s = sorted(iv for iv in t if iv.begin < limit)
+        assert [i for i in t.iterOverlap(None, limit)] == s
 
-        s = set(iv for iv in t if iv.end > limit)
-        assert set(i for i in t.iterOverlap(limit)) == s
+        s = sorted(iv for iv in t if iv.end > limit)
+        assert [i for i in t.iterOverlap(limit)] == s
+
+    assert_iter(IntervalTree.from_tuples(data.ivs1.data), 7)
+    assert_iter(IntervalTree.from_tuples(data.ivs2.data), -3)
+
+
+def test_end_order_iter():
+    def assert_iter(t, limit):
+        keyFunc = cmp_to_key(lambda a, b: a.endCmp(b))
+        s = sorted(t, key=keyFunc)
+        assert [i for i in t.iterOverlap(endOrder=True)] == s
+
+        s = sorted([iv for iv in t if iv.begin < limit], key=keyFunc)
+        assert [i for i in t.iterOverlap(None, limit, endOrder=True)] == s
+
+        s = sorted([iv for iv in t if iv.end > limit], key=keyFunc)
+        assert [i for i in t.iterOverlap(limit, endOrder=True)] == s
 
     assert_iter(IntervalTree.from_tuples(data.ivs1.data), 7)
     assert_iter(IntervalTree.from_tuples(data.ivs2.data), -3)

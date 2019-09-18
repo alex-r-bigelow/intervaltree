@@ -32,7 +32,7 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
 
     def __new__(cls, begin, end, data=None):
         return super(Interval, cls).__new__(cls, begin, end, data)
-    
+
     def overlaps(self, begin, end=None):
         """
         Whether the interval overlaps the given point, range or Interval.
@@ -44,7 +44,7 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
         if end is not None:
             # An overlap means that some C exists that is inside both ranges:
             #   begin <= C < end
-            # and 
+            # and
             #   self.begin <= C < self.end
             # See https://stackoverflow.com/questions/3269434/whats-the-most-efficient-way-to-test-two-integer-ranges-for-overlap/3269471#3269471
             return begin < self.end and end > self.begin
@@ -84,7 +84,7 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
         :rtype: bool
         """
         return self.begin <= p < self.end
-    
+
     def range_matches(self, other):
         """
         Whether the begins equal and the ends equal. Compare __eq__().
@@ -93,10 +93,10 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
         :rtype: bool
         """
         return (
-            self.begin == other.begin and 
+            self.begin == other.begin and
             self.end == other.end
         )
-    
+
     def contains_interval(self, other):
         """
         Whether other is contained in this Interval.
@@ -108,10 +108,10 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
             self.begin <= other.begin and
             self.end >= other.end
         )
-    
+
     def distance_to(self, other):
         """
-        Returns the size of the gap between intervals, or 0 
+        Returns the size of the gap between intervals, or 0
         if they touch or overlap.
         :param other: Interval or point
         :return: distance
@@ -186,6 +186,37 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
         s = self[0:2]
         try:
             o = other[0:2]
+        except:
+            o = (other,)
+        if s != o:
+            return -1 if s < o else 1
+        try:
+            if self.data == other.data:
+                return 0
+            return -1 if self.data < other.data else 1
+        except TypeError:
+            s = type(self.data).__name__
+            o = type(other.data).__name__
+            if s == o:
+                return 0
+            return -1 if s < o else 1
+
+    def endCmp(self, other):
+        """
+        Alternative ordering to the default __cmp__; tells whether other sorts
+        before, after or equal to this Interval based on end position first.
+
+        Sorting is by ends, then by begins, then by data fields.
+
+        If data fields are not both sortable types, data fields are
+        compared alphabetically by type name.
+        :param other: Interval
+        :return: -1, 0, 1
+        :rtype: int
+        """
+        s = self[1::-1]
+        try:
+            o = other[1::-1]
         except:
             o = (other,)
         if s != o:
@@ -291,7 +322,7 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
             return self.begin, self.end, self.data
         else:
             return self.begin, self.end
-    
+
     def __repr__(self):
         """
         Executable string representation of this Interval.
@@ -318,7 +349,7 @@ class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
         :rtype: Interval
         """
         return Interval(self.begin, self.end, self.data)
-    
+
     def __reduce__(self):
         """
         For pickle-ing.

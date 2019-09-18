@@ -1140,7 +1140,7 @@ class IntervalTree(MutableSet):
         """
         return IntervalTree, (sorted(self.all_intervals),)
 
-    def iterOverlap(self, begin=None, end=None):
+    def iterOverlap(self, begin=None, end=None, endOrder=False):
         """
         Returns an iterator over a search range.
 
@@ -1154,7 +1154,7 @@ class IntervalTree(MutableSet):
         root = self.top_node
         if not root or begin >= end:
             return
-        yield from root.iterOverlap(begin, end)
+        yield from root.iterOverlap(begin, end, endOrder)
 
     def computeCountHistogram(self, bins=100, begin=None, end=None):
         """

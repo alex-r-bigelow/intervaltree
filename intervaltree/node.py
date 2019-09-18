@@ -22,6 +22,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from functools import cmp_to_key
 from operator import attrgetter
 from math import floor, log
 
@@ -629,11 +630,48 @@ class Node(object):
         else:
             print(result)
 
-    def iterOverlap(self, begin, end):
+    def iterOverlap(self, begin, end, endOrder):
+        # First, figure out which intervals stored in this node are eligible,
+        # and sort them by begin position (or end if endOrder is True)
+        myIntervals = filter(lambda interval: begin < interval.end and end > interval.begin, self.s_center)
+        if endOrder:
+            keyFunc = cmp_to_key(lambda a, b: a.__cmp__(b))
+        else:
+            keyFunc = cmp_to_key(lambda a, b: a.endCmp(b))
+        myIntervals = sorted(myIntervals, key=keyFunc)
+        myIndex = 0
         if self.left_node and begin < self.left_node.end:
-            yield from self.left_node.iterOverlap(begin, end)
-        for interval in self.s_center:
-            if begin < interval.end and end > interval.begin:
-                yield interval
+            if endOrder:
+                # by definition, all intervals in left_node will end before myIntervals end
+                yield from self.left_node.iterOverlap(begin, end, endOrder)
+            else:
+                # interleave my intervals with those of the left node, based on begin order
+                for interval in self.left_node.iterOverlap(begin, end, endOrder):
+                    while myIndex < len(myIntervals) and myIntervals[myIndex].__cmp__(interval) == -1:
+                        yield myIntervals[myIndex]
+                        myIndex += 1
+                    yield interval
+
+        if not endOrder:
+            # all of myIntervals begin before right_node intervals begin
+            while myIndex < len(myIntervals):
+                yield myIntervals[myIndex]
+                myIndex += 1
+
         if self.right_node and end > self.right_node.begin:
-            yield from self.right_node.iterOverlap(begin, end)
+            if endOrder:
+                # interleave my intervals with those of the right node, based on end order
+                for interval in self.right_node.iterOverlap(begin, end, endOrder):
+                    while myIndex < len(myIntervals) and myIntervals[myIndex].endCmp(interval) == -1:
+                        yield myIntervals[myIndex]
+                        myIndex += 1
+                    yield interval
+            else:
+                # by definition, all intervals in right_node will begin after myIntervals begin
+                yield from self.right_node.iterOverlap(begin, end, endOrder)
+
+        if endOrder:
+            # yield any remaining intervals that ended after right_node
+            while myIndex < len(myIntervals):
+                yield myIntervals[myIndex]
+                myIndex += 1
