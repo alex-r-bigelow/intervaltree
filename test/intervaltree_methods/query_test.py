@@ -122,6 +122,7 @@ def test_end_order_iter():
 
     assert_iter(IntervalTree.from_tuples(data.ivs1.data), 7)
     assert_iter(IntervalTree.from_tuples(data.ivs2.data), -3)
+    assert_iter(IntervalTree.from_tuples(data.histograms.order_errata), 16)
 
 
 def test_tree_bounds():
